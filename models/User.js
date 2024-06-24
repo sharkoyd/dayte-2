@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
+const { finishProfile } = require("../controllers/userController");
 
 
 // schema defines the structure of the documents that you can store in the collection
@@ -17,21 +18,21 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
   first_name: {
     type: String,
-    required: true,
   },
   last_name: {
     type: String,
-    required: true,
   },
   date_of_birth: {
     type: Date,
-    required: true,
   },
   gender: {
     type: String,
-    required: true,
   },
   // each user has an array of interests
   interests: [
@@ -90,6 +91,53 @@ userSchema.pre('save', async function(next) {
   }
   next();
 });
+
+
+userSchema.methods.getEmptyFields = function() {
+  const user = this;
+  const emptyFields = [];
+  
+  if (!user.first_name) {
+    emptyFields.push('first_name');
+  }
+  
+  if (!user.last_name) {
+    emptyFields.push('last_name');
+  }
+  
+  if (!user.date_of_birth) {
+    emptyFields.push('date_of_birth');
+  }
+  
+  if (!user.gender) {
+    emptyFields.push('gender');
+  }
+  
+  if (user.interests.length === 0) {
+    emptyFields.push('interests');
+  }
+  
+  if (user.prompts.length === 0) {
+    emptyFields.push('prompts');
+  }
+  
+  if (!user.description) {
+    emptyFields.push('description');
+  }
+  
+  if (user.images.length === 0) {
+    emptyFields.push('images');
+  }
+
+  if (!user.location) {
+    emptyFields.push('location');
+  }
+  
+  return emptyFields;
+};
+
+
+
 
 userSchema.methods.generateAuthToken = async function() {
   const user = this;

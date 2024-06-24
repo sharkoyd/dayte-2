@@ -7,5 +7,6 @@ const router = express.Router();
 
 // like a recommended user
 router.post('/like', auth, dateController.like);
-
+router.get('/matches', auth, dateController.getUserMatches);
+router.post('/setProposedDate', auth, dateController.setProposedDate);
 module.exports = router;
