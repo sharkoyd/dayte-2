@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon app.js | npx pino-pretty --translateTime --colorize",
+    "start": "nodemon server.js | npx pino-pretty --translateTime --colorize",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
