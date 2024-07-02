@@ -1,8 +1,9 @@
-const User = require("../models/User");
 const catchAsync = require("../utils/catchAsync");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const VerificationCode = require("../models/VerificationCode");
+const User = require("../models/User");
 
 const UserImage = require("../models/UserImage");
 const { log } = require("console");
@@ -29,27 +30,68 @@ const UserController = {
     if (password !== password2) {
       return next(new appError("Passwords do not match", 400));
     }
+    console.log(User);
+    console.log(phone_number, password, password2);
     const user = new User({ phone_number, password });
-    await user.save();  
+    await user.save();
     const token = await user.generateAuthToken();
+    // redirect to the next step which is validating the phone number
     res.status(201).send({ token });
   }),
 
+  // step 2: this sends a code to the phone number
+  sendVerificationCode: catchAsync(async (req, res, next) => {
+    const user = req.user;
 
+    const existingVerificationCode = await VerificationCode.findOne({
+      user: user._id,
+    });
+    if (existingVerificationCode) {
+      if (!existingVerificationCode.isExpired()) {
+        return next(new appError(`Verification code already sent`, 400));
+      }
+      await VerificationCode.deleteMany({ user: user._id });
+    }
 
-  finishProfile: [ 
+    const verificationCode = new VerificationCode({ user: user._id });
+    await verificationCode.save();
+    res.status(200).send({ message: "Verification code sent" });
+  }),
+
+  // step 3: this gets the code sent to the phone number and verifies the phone number
+  verifyPhoneNumber: catchAsync(async (req, res, next) => {
+    const user = req.user;
+    const { code } = req.body;
+    const verificationCode = await VerificationCode.findOne({
+      user: user._id,
+      code,
+    });
+    if (!verificationCode) {
+      return next(new appError("Invalid verification code", 400));
+    }
+    if (verificationCode.isExpired()) {
+      return next(new appError("Verification code has expired", 400));
+    }
+    await VerificationCode.deleteMany({ user: user._id });
+    user.verified = true;
+    await user.save();
+    res.status(200).send({ message: "Phone number verified" });
+  }),
+
+  finishProfile: [
     upload.array("images", 12),
     catchAsync(async (req, res, next) => {
-      const { images, ...userWithoutImages } = req.body;
-
+      const { images, location, ...userWithoutImages } = req.body;
+      if (location) {
+        try {
+          userWithoutImages.location = JSON.parse(location);
+        } catch (error) {
+          return next(new appError("Invalid location format", 400));
+        }
+      }
       let user = await User.findOne({ _id: req.user._id });
       if (user.getEmptyFields().length === 0) {
         return next(new appError("User profile already completed", 400));
-      }
-
-
-      if (typeof req.body.location === 'string') {
-        req.body.location = JSON.parse(req.body.location);
       }
 
       user = await User.findOneAndUpdate(
@@ -79,17 +121,9 @@ const UserController = {
         await user.save();
       }
 
-      const token = await user.generateAuthToken();
-      res.status(201).send({ token });
+      res.status(200).send({ message: "Profile completed" });
     }),
   ],
-
-  // get unfinished profile fields
-  getEmptyFields: catchAsync(async (req, res, next) => {
-    const user = await User.findOne({ _id: req.user._id });
-    const emptyFields = user.getEmptyFields();
-    res.send({ emptyFields });
-  }),
 
   login: catchAsync(async (req, res, next) => {
     console.log(req.body);

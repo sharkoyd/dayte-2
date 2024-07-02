@@ -13,8 +13,6 @@ module.exports = catchAsync(async function (req, res, next) {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     req.user = await User.findById(verified._id);
 
-    if (req.user.verified)
-      return next(new AppError("User is not verified", 403));
 
     next();
   } catch (err) {

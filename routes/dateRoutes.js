@@ -1,4 +1,5 @@
 const express = require('express');
+const verifiedPhoneNumber = require("../middleware/verifiedPhoneNumber");
 
 const auth = require('../middleware/auth');
 const dateController = require('../controllers/dateController');

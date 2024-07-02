@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
-const { finishProfile } = require("../controllers/userController");
 
 
 // schema defines the structure of the documents that you can store in the collection
@@ -58,12 +57,14 @@ const userSchema = new Schema({
   ],
   location: {
     type: {
-      type: String,
-      enum: ["Point"], // 'location.type' must be 'Point'
+      type: String, // Required for GeoJSON objects
+      enum: ['Point'], // 'location.type' must be 'Point'
+      required: true
     },
     coordinates: {
-      type: [Number],
-    },
+      type: [Number], // Array of numbers for longitude and latitude
+      required: true
+    }
   },
   plan: {
     type: String,
@@ -132,7 +133,7 @@ userSchema.methods.getEmptyFields = function() {
   if (!user.location) {
     emptyFields.push('location');
   }
-  
+
   return emptyFields;
 };
 
@@ -164,6 +165,6 @@ userSchema.index({ location: "2dsphere" });
 
 
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;
