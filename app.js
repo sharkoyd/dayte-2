@@ -1,43 +1,28 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const AppError = require("./utils/appError");
 const path = require('path');
-require('dotenv').config();
 
 const app = express();
-const port = 3000;
 
-//  connecting to the database
-const uri =
-  "mongodb+srv://hbechir52:f9lGeVA5Kq5SdWr9@dayte.fhrecju.mongodb.net/?retryWrites=true&w=majority&appName=dayte";
-mongoose
-  .connect(uri)
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`App listening at http://localhost:${port}`);
-    });
-  })
-  .catch((err) => {
-    console.log("Error connecting to MongoDB", err);
-  });
+// Middleware
+app.use(express.json()); // for parsing application/json
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
-
-
-// 🔀 Routing ----------------------------------------------------------
-
-  // static files
-  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-
+// Routes
 const interestRoutes = require('./routes/interestRoutes');
 const authRoutes = require('./routes/authRoutes');
-app.use(express.json()); // for parsing application/json
-app.use('/interests', interestRoutes);
-app.use('/user', authRoutes);
-app.use('/recommendations', require('./routes/recommendationRoutes'));
-app.use('/date', require('./routes/dateRoutes'));
-app.all("*", (req, res, next) => {
-    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-  });
+const recommendationRoutes = require('./routes/recommendationRoutes');
+const dateRoutes = require('./routes/dateRoutes');
 
+// 3) ROUTES
+app.use("/api/v1/interests", interestRoutes);
+app.use("/api/v1/user", authRoutes);
+app.use("/api/v1/recommendations", recommendationRoutes);
+app.use("/api/v1/date", dateRoutes);
+
+// Error handling for undefined routes
+app.all("*", (req, res, next) => {
+    next(new AppError("Can't find ${req.originalUrl} on this server!", 404));
+});
+
+module.exports = app;
