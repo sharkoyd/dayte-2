@@ -59,11 +59,9 @@ const userSchema = new Schema({
     type: {
       type: String, // Required for GeoJSON objects
       enum: ['Point'], // 'location.type' must be 'Point'
-      required: true
     },
     coordinates: {
       type: [Number], // Array of numbers for longitude and latitude
-      required: true
     }
   },
   plan: {

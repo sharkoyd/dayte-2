@@ -30,8 +30,11 @@ const UserController = {
     if (password !== password2) {
       return next(new appError("Passwords do not match", 400));
     }
-    console.log(User);
-    console.log(phone_number, password, password2);
+    const existingUser = await User.findOne({ phone_number });
+    if (existingUser) {
+      return next(new appError("User with the same phone number already exists", 400));
+    }
+
     const user = new User({ phone_number, password });
     await user.save();
     const token = await user.generateAuthToken();
