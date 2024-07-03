@@ -1,34 +1,18 @@
 const express = require("express");
 const AppError = require("./utils/appError");
-const path = require('path');
-const cors = require("cors");
-const morgan = require("morgan");
-const rateLimit = require("express-rate-limit");
-const globalErrorHandler = require("./controllers/errorController");
-const xss = require("xss-clean");
-const mongoSanitize = require("express-mongo-sanitize");
-const helmet = require("helmet");
+const path = require("path");
+
 const app = express();
-const bodyParser = require("body-parser");
 
 // Middleware
 app.use(express.json()); // for parsing application/json
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(cors());
-app.use(xss());
-app.use(mongoSanitize());
-app.use(helmet());
-app.use(morgan("dev"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
-const interestRoutes = require('./routes/interestRoutes');
-const authRoutes = require('./routes/authRoutes');
-const recommendationRoutes = require('./routes/recommendationRoutes');
-const dateRoutes = require('./routes/dateRoutes');
+const interestRoutes = require("./routes/interestRoutes");
+const authRoutes = require("./routes/authRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
+const dateRoutes = require("./routes/dateRoutes");
 
 // 3) ROUTES
 app.use("/interests", interestRoutes);
@@ -36,11 +20,28 @@ app.use("/user", authRoutes);
 app.use("/recommendations", recommendationRoutes);
 app.use("/date", dateRoutes);
 
-// Error handling for undefined routes
-app.all("*", (req, res, next) => {
-    next(new AppError("Can't find ${req.originalUrl} on this server!", 404));
+// Error handling middleware
+app.use((err, req, res, next) => {
+  if (err instanceof AppError) {
+    // If the error is an instance of AppError, send a formatted JSON response
+    res.status(err.statusCode).json({
+      status: err.status,
+      message: err.message,
+      ...(process.env.NODE_ENV === "development" && { stack: err.stack }), // Optionally include stack trace in development mode
+    });
+  } else {
+    // For other types of errors, you might want to send a generic response or handle them differently
+    console.error("Error 💥", err);
+    res.status(500).json({
+      status: "error",
+      message: "Something went very wrong!",
+    });
+  }
 });
 
-app.use(globalErrorHandler);
+// Error handling for undefined routes
+app.all("*", (req, res, next) => {
+  next(new AppError("Can't find ${req.originalUrl} on this server!", 404));
+});
 
 module.exports = app;

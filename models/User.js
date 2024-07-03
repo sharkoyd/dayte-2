@@ -67,7 +67,12 @@ const userSchema = new Schema({
   plan: {
     type: String,
     default: "free",
+    enum: ["free", "premium", "basic"],
   },
+  end_of_plan: {
+    type: Date,
+  },
+
 });
 
 

@@ -9,7 +9,7 @@ module.exports = catchAsync(async function (req, res, next) {
     const emptyFields = user.getEmptyFields();
     if (emptyFields.length > 0) {
         // return app error with the right status code and the empty fields
-        return next(new AppError(emptyFields, 400));
+        return next(new AppError("User profile not completed", 400));
     }
     next();
 }

@@ -32,13 +32,19 @@ const UserController = {
     }
     const existingUser = await User.findOne({ phone_number });
     if (existingUser) {
-      return next(new appError("User with the same phone number already exists", 400));
+      return next(
+        new appError("User with the same phone number already exists", 400)
+      );
     }
 
     const user = new User({ phone_number, password });
     await user.save();
     const token = await user.generateAuthToken();
     // redirect to the next step which is validating the phone number
+
+    const verificationCode = new VerificationCode({ user: user._id });
+    await verificationCode.save();
+
     res.status(201).send({ token });
   }),
 
@@ -58,7 +64,7 @@ const UserController = {
 
     const verificationCode = new VerificationCode({ user: user._id });
     await verificationCode.save();
-    res.status(200).send({ message: "Verification code sent" });
+    res.status(200).send({ message: "Verification code sent successfully" });
   }),
 
   // step 3: this gets the code sent to the phone number and verifies the phone number
@@ -73,7 +79,7 @@ const UserController = {
       return next(new appError("Invalid verification code", 400));
     }
     if (verificationCode.isExpired()) {
-      return next(new appError("Verification code has expired", 400));
+      return next(new appError("Verification code has expired, resend", 400));
     }
     await VerificationCode.deleteMany({ user: user._id });
     user.verified = true;
@@ -84,7 +90,7 @@ const UserController = {
   finishProfile: [
     upload.array("images", 12),
     catchAsync(async (req, res, next) => {
-      const { images, location, ...userWithoutImages } = req.body;
+      const { images, location, plan, ...userWithoutImages } = req.body;
       if (location) {
         try {
           userWithoutImages.location = JSON.parse(location);
@@ -97,9 +103,23 @@ const UserController = {
         return next(new appError("User profile already completed", 400));
       }
 
+      if (plan) {
+        if (!["free", "premium", "basic"].includes(plan)) {
+          return next(new appError("Invalid plan", 400));
+        }
+        if (plan === "free") {
+          // if the plan is free end of plan is now plus 7 days
+          user.end_of_plan = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        }
+        if (plan === "premium" || plan === "basic") {
+          // if the plan is premium end of plan is now plus 30 days
+          user.end_of_plan = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        }
+      }
+
       user = await User.findOneAndUpdate(
         { _id: req.user._id },
-        { ...userWithoutImages },
+        { ...userWithoutImages, plan },
         { new: true }
       );
 
