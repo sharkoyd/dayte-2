@@ -15,10 +15,10 @@ const recommendationRoutes = require("./routes/recommendationRoutes");
 const dateRoutes = require("./routes/dateRoutes");
 
 // 3) ROUTES
-app.use("/interests", interestRoutes);
-app.use("/user", authRoutes);
-app.use("/recommendations", recommendationRoutes);
-app.use("/date", dateRoutes);
+app.use("/api/v1/interests", interestRoutes);
+app.use("/api/v1/user", authRoutes);
+app.use("/api/v1/recommendations", recommendationRoutes);
+app.use("/api/v1/date", dateRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
