@@ -156,7 +156,7 @@ const UserController = {
       req.body.password
     );
     const token = await user.generateAuthToken();
-    res.send({ token });
+    res.send({ token, user });
   }),
 
   getProfile: catchAsync(async (req, res, next) => {
