@@ -84,7 +84,7 @@ const UserController = {
     await VerificationCode.deleteMany({ user: user._id });
     user.verified = true;
     await user.save();
-    res.status(200).send({ message: "Phone number verified" });
+    res.status(200).send({ message: "Phone number has been verified successfully" });
   }),
 
   finishProfile: [

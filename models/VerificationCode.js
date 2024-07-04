@@ -24,7 +24,7 @@ const VerificationCodeSchema = new Schema({
 });
 
 VerificationCodeSchema.pre("save", function (next) {
-  const code = Math.floor(100000 + Math.random() * 900000);
+  const code = Math.floor(1000 + Math.random() * 9999);
   this.code = code;
   next();
 });

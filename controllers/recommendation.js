@@ -6,7 +6,6 @@ const recommendationController = {
   createRecommendation: catchAsync(async (req, res, next) => {
     // generate recommendations for the logged in user
     const recommendation = await generateRecommendations(req.user._id);
-    console.log(recommendation);
     res.send(recommendation);
   }),
 

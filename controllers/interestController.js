@@ -14,3 +14,16 @@ exports.addInterest = catchAsync(async (req, res,next) => {
     });
 }
 );
+
+// get interests
+
+exports.getInterests = catchAsync(async (req, res,next) => {
+  const interests = await Interest.find();
+  res.status(200).json({
+    status: "success",
+    data: {
+      interests,
+    },
+  });
+}
+);
