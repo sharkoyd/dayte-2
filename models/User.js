@@ -95,7 +95,7 @@ userSchema.methods.getEmptyFields = function () {
   const emptyFields = [];
 
   if (!user.name) {
-    emptyFields.push("first_name");
+    emptyFields.push("name");
   }
 
   if (!user.date_of_birth) {

@@ -37,22 +37,22 @@ const generateRecommendations = async (userId) => {
     _id: { $ne: userId }, // Exclude the current user
     date_of_birth: { $gte: dobStart, $lte: dobEnd }, // Users within 5 years of age
     interests: { $in: user.interests.map((interest) => interest._id) }, // Users with at least one shared interest
-  })
+  });
 
   // Check if the user's plan is free and limit the recommended users to 6
   if (user.plan === "free") {
-    recommendedUsers = recommendedUsers.slice(0, 6);
+    recommendedUsers = recommendedUsers.slice(0, 9);
   }
 
   // Create a new recommendation
   const recommendation = new Recommendation({
-    userId,
+    user: userId,
     recommendedUsers: recommendedUsers.map((user) => user._id),
     date: new Date(),
   });
 
-  await recommendation.save();  
-  await recommendation.populate("recommendedUsers")
+  await recommendation.save();
+  await recommendation.populate("recommendedUsers");
   console.log("Recommendation generated successfully");
   return recommendation;
 };

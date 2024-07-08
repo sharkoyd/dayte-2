@@ -8,9 +8,9 @@ const profileFinished = require("../middleware/profileFinished");
 const router = express.Router();
 
 // Route to create a new recommendation
-router.post('/generate',auth,verifiedPhoneNumber,profileFinished,recommendationController.createRecommendation);
+router.get('/get',auth,verifiedPhoneNumber,profileFinished,recommendationController.getRecommendations);
 
 // Route to get all recommendations
-router.get('/',auth,verifiedPhoneNumber, recommendationController.getRecommendations);
+router.post('/shuffle',auth,verifiedPhoneNumber, recommendationController.shuffleRecommendations);
 
 module.exports = router;
