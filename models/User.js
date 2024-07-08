@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const appError = require("../utils/appError");
 
 const jwt = require("jsonwebtoken");
 
@@ -74,10 +75,10 @@ const userSchema = new Schema({
 
 userSchema.pre(["find", "findOne"], function () {
   this
-  .populate({
-    path: "images",
-    options: { sort: { position: -1 } }, // Sort by position in ascending order
-  }).populate("interests");
+    .populate({
+      path: "images",
+      options: { sort: { position: -1 } }, // Sort by position in ascending order
+    }).populate("interests");
 });
 
 // 🔏 hashing the password before saving a new user
@@ -140,7 +141,7 @@ userSchema.methods.generateAuthToken = async function () {
 userSchema.statics.findByCredentials = async (phone_number, password) => {
   const user = await User.findOne({ phone_number });
   if (!user) {
-    throw new Error("Phone number not found");
+    throw new Error("Wrong phone number or password");
   }
   console.log(user);
   const isMatch = await bcrypt.compare(password, user.password);

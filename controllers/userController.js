@@ -152,12 +152,17 @@ const UserController = {
   login: catchAsync(async (req, res, next) => {
     console.log(req.body);
     console.log("--------------------------------------");
-    const user = await User.findByCredentials(
-      req.body.phone_number,
-      req.body.password
-    );
-    const token = await user.generateAuthToken();
-    res.send({ token, user });
+    try {
+      const user = await User.findByCredentials(
+        req.body.phone_number,
+        req.body.password
+      );
+      const token = await user.generateAuthToken();
+      res.send({ token, user });
+    } catch (error) {
+      return next(new appError("Invalid phone number or password", 400));
+    }
+
   }),
 
   getProfile: catchAsync(async (req, res, next) => {
