@@ -7,7 +7,7 @@ module.exports = catchAsync(async function (req, res, next) {
   if (!req.header("Authorization"))
     return next(new AppError("you have to login first", 410));
   const token = req.header("Authorization").replace("Bearer ", "");
-  if (!token) return next(new AppError("you have to login first", 410));
+  if (!token) return next(new AppError("You have to login first", 410));
 
   try {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
@@ -17,6 +17,6 @@ module.exports = catchAsync(async function (req, res, next) {
     }
     next();
   } catch (err) {
-    next(new AppError("Invalid Token", 410));
+    next(new AppError("You have to login first", 410));
   }
 });

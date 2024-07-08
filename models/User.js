@@ -43,9 +43,9 @@ const userSchema = new Schema({
       type: String,
     },
   ],
-  description: {
+  description: [{
     type: String,
-  },
+  }],
   images: [
     {
       type: Schema.Types.ObjectId,

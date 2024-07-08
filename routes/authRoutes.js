@@ -23,4 +23,7 @@ router.post("/login", UserController.login);
 // Get the profile of the logged in user
 router.get("/profile", auth, UserController.getProfile);
 
+// Update the location of the user
+router.patch("/updatelocation", auth, UserController.updateLocation);
+
 module.exports = router;

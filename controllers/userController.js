@@ -152,6 +152,8 @@ const UserController = {
   login: catchAsync(async (req, res, next) => {
     console.log(req.body);
     console.log("--------------------------------------");
+    console.log(req.body.phone_number);
+
     try {
       const user = await User.findByCredentials(
         req.body.phone_number,
@@ -166,8 +168,31 @@ const UserController = {
   }),
 
   getProfile: catchAsync(async (req, res, next) => {
+
     res.send(req.user);
   }),
+
+
+  updateLocation: catchAsync(async (req, res, next) => {
+    const { location } = req.body;
+    if (!location) {
+      return next(new appError("Location is required", 400));
+    }
+    try {
+      console.log(location);
+      const user = await User.findOneAndUpdate({ _id: req.user._id }, { location: location }, { new: true });
+      res.send(user);
+    } catch (error) {
+      return next(new appError("Invalid location format", 400));
+    }
+  }),
+
+
+
+
+
+
+
 };
 
 module.exports = UserController;
