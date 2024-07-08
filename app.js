@@ -1,13 +1,13 @@
 const express = require("express");
 const AppError = require("./utils/appError");
 const path = require("path");
-
+const morgan = require("morgan");
 const app = express();
 
 // Middleware
 app.use(express.json()); // for parsing application/json
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+app.use(morgan("dev"));
 // Routes
 const interestRoutes = require("./routes/interestRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -41,7 +41,7 @@ app.use((err, req, res, next) => {
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {
-  next(new AppError("Can't find ${req.originalUrl} on this server!", 404));
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 module.exports = app;

@@ -92,6 +92,7 @@ const UserController = {
     catchAsync(async (req, res, next) => {
       const { images, location, plan, ...userWithoutImages } = req.body;
       if (location) {
+        console.log("this is the location :  " + location);
         try {
           userWithoutImages.location = JSON.parse(location);
         } catch (error) {
