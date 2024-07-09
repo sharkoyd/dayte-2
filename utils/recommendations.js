@@ -26,10 +26,10 @@ const generateRecommendations = async (userId) => {
 
   // Calculate the date of birth range for users within 5 years of age
   const dobStart = new Date(
-    new Date().setFullYear(new Date().getFullYear() - age - 5)
+    new Date().setFullYear(new Date().getFullYear() - age - 40)
   );
   const dobEnd = new Date(
-    new Date().setFullYear(new Date().getFullYear() - age + 5)
+    new Date().setFullYear(new Date().getFullYear() - age + 40)
   );
 
   // Find 12 random users with the ones that have more shared interests first and exclude the current user
