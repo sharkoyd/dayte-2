@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const recommendationSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User' },
   recommendedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  date: { type: Date, default: Date.now }
+  date: { type: Date, default: Date.now },
+  likes: { type: Number, default: 0 },
 });
 
 

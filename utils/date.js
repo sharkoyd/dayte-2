@@ -1,3 +1,9 @@
+
+const Recommendation = require('../models/recommendation');
+const User = require('../models/User');
+
+
+
 function findCommonTime(likingUserProposedTime, likedUserProposedTime) {
   const commonTimes = [];
   const now = new Date();
@@ -48,3 +54,38 @@ function findCommonTime(likingUserProposedTime, likedUserProposedTime) {
 
   return commonTimes[0];
 }
+
+
+
+async function checkLikeEligibilityLikesCountAndPlan(likingUserId) {
+
+  const user = await User.findById(likingUserId);
+  const rec = await Recommendation.findOne({ user: likingUserId });
+  const likes = rec.likes;
+  if (user.plan === 'free') {
+    if (likes >= 2) {
+      return false;
+    }
+    return true;
+  }
+
+  if (user.plan === 'basic') {
+    if (likes >= 6) {
+      return false;
+    }
+    return true;
+  }
+
+  if (user.plan === 'premium') {
+    if (likes >= 12) {
+      return false;
+    }
+    return true;
+  }
+
+}
+
+module.exports = {
+  findCommonTime,
+  checkLikeEligibilityLikesCountAndPlan
+};

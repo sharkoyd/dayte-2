@@ -2,7 +2,9 @@ const catchAsync = require("../utils/catchAsync");
 const Date = require("../models/date");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const { checkLikeEligibilityLikesCountAndPlan } = require("../utils/date");
 
+const Recommendation = require("../models/recommendation");
 const findCommonTime = require("../utils/date");
 
 const appError = require("../utils/appError");
@@ -28,24 +30,50 @@ const dateController = {
     const likingUserId = req.user._id;
 
     let date = await Date.findOne({
-      likingUser: likedUserId,
-      likedUser: likingUserId,
+      likingUser: likingUserId,
+      likedUser: likedUserId,
     });
 
+    // checks if the liking user has already liked the liked user
+    if (date) {
+      return next(new appError("You have already liked this user", 400));
+    }
+
+    // checks if the liking user has liked more than the limit based on the plan
+    const elligible = await checkLikeEligibilityLikesCountAndPlan(likingUserId);
+    if (!elligible) {
+      return next(
+        new appError("You can't like more users try again later", 400)
+      );
+    }
+
+    // increment the likes count of the recommendation
+    const recommendation = await Recommendation.findOne({ user: likingUserId });
+    recommendation.likes += 1;
+    await recommendation.save();
+
     if (!date) {
-      date = await Date.create({
-        likingUser: likingUserId,
-        likedUser: likedUserId,
+      reverseDate = await Date.findOne({
+        likingUser: likedUserId,
+        likedUser: likingUserId,
       });
+
+      if (!reverseDate) {
+        date = await Date.create({
+          likingUser: likingUserId,
+          likedUser: likedUserId,
+        });
+      } else {
+        reverseDate.matched = true;
+        date = reverseDate;
+      }
       return res.status(201).json({ date });
     }
 
-    date.matched = true;
     await date.save();
     res.status(200).json({ date });
   }),
 
-  
   getUserMatches: catchAsync(async (req, res, next) => {
     const userId = req.user._id;
     const dates = await Date.find({
@@ -56,7 +84,6 @@ const dateController = {
     res.status(200).json({ dates });
   }),
 
-  
   setProposedDate: catchAsync(async (req, res, next) => {
     const { dateId, proposedTime } = req.body;
 
@@ -70,8 +97,6 @@ const dateController = {
       return next(new appError("Date not found", 404));
     }
 
-
-
     if (
       date.likingUser.toString() !== req.user._id.toString() &&
       date.likedUser.toString() !== req.user._id.toString()
@@ -80,7 +105,12 @@ const dateController = {
     }
 
     if (!date.matched) {
-      return next(new appError("Date is not matched, can't set proposed time until the liked user likes back", 400));
+      return next(
+        new appError(
+          "Date is not matched, can't set proposed time until the liked user likes back",
+          400
+        )
+      );
     }
 
     if (date.likingUser.toString() === req.user._id) {
@@ -89,18 +119,20 @@ const dateController = {
       date.likedUserProposedTime = proposedTime;
     }
 
-  
-
-    if (date.likingUserProposedTime.length && date.likedUserProposedTime.length) {
+    if (
+      date.likingUserProposedTime.length &&
+      date.likedUserProposedTime.length
+    ) {
       // find a common time and set it to finalTime
-      const finalTime = findCommonTime(date.likingUserProposedTime, date.likedUserProposedTime);
+      const finalTime = findCommonTime(
+        date.likingUserProposedTime,
+        date.likedUserProposedTime
+      );
       date.finalTime = finalTime;
     }
     await date.save();
     res.status(200).json({ date });
-  }
-
-  ),
+  }),
 };
 
 module.exports = dateController;
