@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const VerificationCode = require("../models/VerificationCode");
 const User = require("../models/User");
-
+const mongoose = require("mongoose");
 const UserImage = require("../models/UserImage");
 const { log } = require("console");
 const appError = require("../utils/appError");
@@ -84,13 +84,64 @@ const UserController = {
     await VerificationCode.deleteMany({ user: user._id });
     user.verified = true;
     await user.save();
-    res.status(200).send({ message: "Phone number has been verified successfully" });
+    res
+      .status(200)
+      .send({ message: "Phone number has been verified successfully" });
   }),
 
   finishProfile: [
     upload.array("images", 12),
     catchAsync(async (req, res, next) => {
-      const { images, location, plan, ...userWithoutImages } = req.body;
+      const {
+        images,
+        location,
+        plan,
+        prompts,
+        description,
+        interests,
+        ...userWithoutImages
+      } = req.body;
+
+      if (interests) {
+        try {
+          console.log("this is the interests :  " + interests)
+          userWithoutImages.interests = JSON.parse(interests).map((id) =>
+            new mongoose.Types.ObjectId(id)
+          );
+        } catch (error) {
+          console.log(error);
+          return next(new appError("Invalid interests format", 400));
+        }
+      }
+      console.log("interests after parsing :  " + userWithoutImages.interests)
+      
+
+      // Parsing prompts
+      if (prompts) {
+        try {
+          console.log("this is the prompts :  " + prompts)
+          userWithoutImages.prompts = JSON.parse(prompts);
+        } catch (error) {
+          console.log(error);
+          return next(new appError("Invalid prompts format", 400));
+        }
+      }
+      console.log("prompts after parsing :  " + userWithoutImages.prompts)
+
+
+
+      // parsing description
+      if (description) {
+        try {
+          console.log("this is the description :  " + description)
+          userWithoutImages.description = JSON.parse(description);
+        } catch (error) {
+          console.log(error);
+          return next(new appError("Invalid description format", 400));
+        }
+      }
+      console.log("description after parsing :  " + userWithoutImages.description)
+
       if (location) {
         console.log("this is the location :  " + location);
         try {
@@ -164,14 +215,11 @@ const UserController = {
     } catch (error) {
       return next(new appError("Invalid phone number or password", 400));
     }
-
   }),
 
   getProfile: catchAsync(async (req, res, next) => {
-
     res.send(req.user);
   }),
-
 
   updateLocation: catchAsync(async (req, res, next) => {
     const { location } = req.body;
@@ -180,19 +228,16 @@ const UserController = {
     }
     try {
       console.log(location);
-      const user = await User.findOneAndUpdate({ _id: req.user._id }, { location: location }, { new: true });
+      const user = await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { location: location },
+        { new: true }
+      );
       res.send(user);
     } catch (error) {
       return next(new appError("Invalid location format", 400));
     }
   }),
-
-
-
-
-
-
-
 };
 
 module.exports = UserController;
