@@ -104,43 +104,42 @@ const UserController = {
 
       if (interests) {
         try {
-          console.log("this is the interests :  " + interests)
-          userWithoutImages.interests = JSON.parse(interests).map((id) =>
-            new mongoose.Types.ObjectId(id)
+          console.log("this is the interests :  " + interests);
+          userWithoutImages.interests = JSON.parse(interests).map(
+            (id) => new mongoose.Types.ObjectId(id)
           );
         } catch (error) {
           console.log(error);
           return next(new appError("Invalid interests format", 400));
         }
       }
-      console.log("interests after parsing :  " + userWithoutImages.interests)
-
+      console.log("interests after parsing :  " + userWithoutImages.interests);
 
       // Parsing prompts
       if (prompts) {
         try {
-          console.log("this is the prompts :  " + prompts)
+          console.log("this is the prompts :  " + prompts);
           userWithoutImages.prompts = JSON.parse(prompts);
         } catch (error) {
           console.log(error);
           return next(new appError("Invalid prompts format", 400));
         }
       }
-      console.log("prompts after parsing :  " + userWithoutImages.prompts)
-
-
+      console.log("prompts after parsing :  " + userWithoutImages.prompts);
 
       // parsing description
       if (description) {
         try {
-          console.log("this is the description :  " + description)
+          console.log("this is the description :  " + description);
           userWithoutImages.description = JSON.parse(description);
         } catch (error) {
           console.log(error);
           return next(new appError("Invalid description format", 400));
         }
       }
-      console.log("description after parsing :  " + userWithoutImages.description)
+      console.log(
+        "description after parsing :  " + userWithoutImages.description
+      );
 
       if (location) {
         console.log("this is the location :  " + location);
@@ -238,6 +237,67 @@ const UserController = {
       return next(new appError("Invalid location format", 400));
     }
   }),
+
+  updatePassword: catchAsync(async (req, res, next) => {
+    const { oldPassword, newPassword, newPassword2 } = req.body;
+    if (newPassword !== newPassword2) {
+      return next(new appError("Passwords do not match", 400));
+    }
+    try {
+      const user = await User.findByCredentials(
+        req.user.phone_number,
+        oldPassword
+      );
+      user.password = newPassword;
+      await user.save();
+      res.send({ message: "Password updated successfully" });
+    } catch (error) {
+      return next(new appError("double check your old password", 400));
+    }
+  }),
+
+
+
+  
+  // forgot password ------------------
+
+  forgotPassword: catchAsync(async (req, res, next) => {
+    const { phone_number } = req.body;
+    const user = await User.findOne({ phone_number });
+    if (!user) {
+      return next(new appError("User not found", 400));
+    }
+    const verificationCode = new VerificationCode({ user: user._id });
+    await verificationCode.save();
+    res.send({ message: "Verification code sent successfully" });
+  }),
+
+  // reset password ------------------
+  resetPassword: catchAsync(async (req, res, next) => {
+    const { phone_number, code, password, password2 } = req.body;
+    if (password !== password2) {
+      return next(new appError("Passwords do not match", 400));
+    }
+    const user = await User.findOne({ phone_number });
+    if (!user) {
+      return next(new appError("User not found", 400));
+    }
+    const verificationCode = await VerificationCode.findOne({
+      user: user._id,
+      code,
+    });
+    if (!verificationCode) {
+      return next(new appError("Invalid verification code", 400));
+    }
+    if (verificationCode.isExpired()) {
+      return next(new appError("Verification code has expired, resend", 400));
+    }
+    await VerificationCode.deleteMany({ user: user._id });
+    user.password = password;
+    await user.save();
+    res.send({ message: "Password reset successfully" });
+  })
+  
 };
 
 module.exports = UserController;

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const appError = require("../utils/appError");
+const DateModel = require("./Date");
 
 const jwt = require("jsonwebtoken");
 
@@ -82,6 +83,20 @@ userSchema.virtual('age').get(function() {
   }
   return age;
 });
+
+
+userSchema.methods.checkIfLikedBy = async function (currentUserId) {
+  const DateModel = mongoose.model('Date'); // Assuming DateModel is already defined
+  const likeStatus = await DateModel.findOne({
+    likingUser: currentUserId,
+    likedUser: this._id,
+  });
+  return !!likeStatus;
+};
+
+
+
+
 
 // Ensure virtual fields are included in toJSON and toObject
 userSchema.set('toJSON', { virtuals: true });

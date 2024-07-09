@@ -26,4 +26,14 @@ router.get("/profile", auth, UserController.getProfile);
 // Update the location of the user
 router.patch("/updatelocation", auth, UserController.updateLocation);
 
+// update password
+router.patch("/updatepassword", auth, UserController.updatePassword);
+
+
+// Forgot password
+router.post("/forgotpassword", UserController.forgotPassword);
+
+// Reset password
+router.post("/resetpassword", UserController.resetPassword);
+
 module.exports = router;

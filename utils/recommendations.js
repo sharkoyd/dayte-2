@@ -9,7 +9,7 @@ const generateRecommendations = async (userId) => {
     throw new Error("User not found");
   }
 
-  //   check if the user has a generated recommendation in the past 24 hr
+  // check if the user has a generated recommendation in the past 24 hr
   const existingRecommendation = await Recommendation.findOne({
     userId,
     date: { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) },
@@ -26,10 +26,10 @@ const generateRecommendations = async (userId) => {
 
   // Calculate the date of birth range for users within 5 years of age
   const dobStart = new Date(
-    new Date().setFullYear(new Date().getFullYear() - age - 40)
+    new Date().setFullYear(new Date().getFullYear() - age - 20)
   );
   const dobEnd = new Date(
-    new Date().setFullYear(new Date().getFullYear() - age + 40)
+    new Date().setFullYear(new Date().getFullYear() - -age + 20)
   );
 
   // Find 12 random users with the ones that have more shared interests first and exclude the current user
@@ -50,10 +50,10 @@ const generateRecommendations = async (userId) => {
 
   // 👆🏻👆🏻👆🏻 still not tested yet ... if you face error comment it and uncomment the one bellow 👇🏻👇🏻👇🏻
 
-
+  
   let recommendedUsers = await User.find({
     _id: { $ne: userId }, // Exclude the current user
-    date_of_birth: { $gte: dobStart, $lte: dobEnd }, // Users within 5 years of age
+    date_of_birth: { $gte: dobStart, $lte: dobEnd }, // Users within 20 years of age
     interests: { $in: user.interests.map((interest) => interest._id) }, // Users with at least one shared interest
   });
 
@@ -69,12 +69,16 @@ const generateRecommendations = async (userId) => {
   // Create a new recommendation
   const recommendation = new Recommendation({
     user: userId,
-    recommendedUsers: recommendedUsers.map((user) => user._id),
+    recommendedUsers: recommendedUsers,
     date: new Date(),
   });
 
+
+  
+
   await recommendation.save();
-  await recommendation.populate("recommendedUsers");
+
+  
   console.log("Recommendation generated successfully");
   return recommendation;
 };

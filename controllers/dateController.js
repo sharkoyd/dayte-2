@@ -1,5 +1,5 @@
 const catchAsync = require("../utils/catchAsync");
-const Date = require("../models/date");
+const DateModel = require("../models/Date");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const { checkLikeEligibilityLikesCountAndPlan } = require("../utils/date");
@@ -29,7 +29,7 @@ const dateController = {
     }
     const likingUserId = req.user._id;
 
-    let date = await Date.findOne({
+    let date = await DateModel.findOne({
       likingUser: likingUserId,
       likedUser: likedUserId,
     });
@@ -53,13 +53,13 @@ const dateController = {
     await recommendation.save();
 
     if (!date) {
-      reverseDate = await Date.findOne({
+      reverseDate = await DateModel.findOne({
         likingUser: likedUserId,
         likedUser: likingUserId,
       });
 
       if (!reverseDate) {
-        date = await Date.create({
+        date = await DateModel.create({
           likingUser: likingUserId,
           likedUser: likedUserId,
         });
@@ -76,7 +76,7 @@ const dateController = {
 
   getUserMatches: catchAsync(async (req, res, next) => {
     const userId = req.user._id;
-    const dates = await Date.find({
+    const dates = await DateModel.find({
       $or: [{ likingUser: userId }, { likedUser: userId }],
       matched: true,
     }).populate("likingUser likedUser");
