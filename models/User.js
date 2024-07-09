@@ -71,14 +71,29 @@ const userSchema = new Schema({
   },
 });
 
-// on seelecting a user we don't want to return the password and we return the actual images in their table and the actual interests in their table
+// Virtual field for age
+userSchema.virtual('age').get(function() {
+  const today = new Date();
+  const birthDate = new Date(this.date_of_birth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+});
+
+// Ensure virtual fields are included in toJSON and toObject
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
 
 userSchema.pre(["find", "findOne"], function () {
   this
     .populate({
       path: "images",
       options: { sort: { position: -1 } }, // Sort by position in ascending order
-    }).populate("interests");
+    })
+    .populate("interests");
 });
 
 // 🔏 hashing the password before saving a new user
