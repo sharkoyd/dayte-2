@@ -32,12 +32,34 @@ const generateRecommendations = async (userId) => {
     new Date().setFullYear(new Date().getFullYear() - age + 5)
   );
 
-  // Find users with a similar age (within 5 years) and at least one shared interest
-  let recommendedUsers = await User.find({
-    _id: { $ne: userId }, // Exclude the current user
-    date_of_birth: { $gte: dobStart, $lte: dobEnd }, // Users within 5 years of age
-    interests: { $in: user.interests.map((interest) => interest._id) }, // Users with at least one shared interest
-  });
+  // Find 12 random users with the ones that have more shared interests first and exclude the current user
+  let recommendedUsers = await User.aggregate([
+    { $match: { _id: { $ne: userId } } },
+    { $sample: { size: 12 } },
+    {
+      $addFields: {
+        sharedInterests: {
+          $size: {
+            $setIntersection: ["$interests", user.interests],
+          },
+        },
+      },
+    },
+    { $sort: { sharedInterests: -1 } },
+  ]);
+
+  // 👆🏻👆🏻👆🏻 still not tested yet ... if you face error comment it and uncomment the one bellow 👇🏻👇🏻👇🏻
+
+  
+  // let recommendedUsers = await User.find({
+  //   _id: { $ne: userId }, // Exclude the current user
+  //   date_of_birth: { $gte: dobStart, $lte: dobEnd }, // Users within 5 years of age
+  //   interests: { $in: user.interests.map((interest) => interest._id) }, // Users with at least one shared interest
+  // });
+
+
+
+
 
   // Check if the user's plan is free and limit the recommended users to 6
   if (user.plan === "free") {
