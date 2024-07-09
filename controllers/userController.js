@@ -114,7 +114,7 @@ const UserController = {
         }
       }
       console.log("interests after parsing :  " + userWithoutImages.interests)
-      
+
 
       // Parsing prompts
       if (prompts) {
