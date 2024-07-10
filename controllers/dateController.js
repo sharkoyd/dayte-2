@@ -81,7 +81,13 @@ const dateController = {
       matched: true,
     }).populate("likingUser likedUser");
 
+    if (dates.length === 0) {
+      return next(new appError("You don't have any matches", 400));
+    }
     res.status(200).json({ dates });
+
+
+
   }),
 
   setProposedDate: catchAsync(async (req, res, next) => {
