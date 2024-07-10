@@ -258,7 +258,7 @@ const UserController = {
 
 
 
-  
+
   // forgot password ------------------
 
   forgotPassword: catchAsync(async (req, res, next) => {
@@ -272,9 +272,12 @@ const UserController = {
     res.send({ message: "Verification code sent successfully" });
   }),
 
+
+
+
   // reset password ------------------
   resetPassword: catchAsync(async (req, res, next) => {
-    const { phone_number, code, password, password2 } = req.body;
+    const { phone_number, password, password2 } = req.body;
     if (password !== password2) {
       return next(new appError("Passwords do not match", 400));
     }
@@ -282,22 +285,11 @@ const UserController = {
     if (!user) {
       return next(new appError("User not found", 400));
     }
-    const verificationCode = await VerificationCode.findOne({
-      user: user._id,
-      code,
-    });
-    if (!verificationCode) {
-      return next(new appError("Invalid verification code", 400));
-    }
-    if (verificationCode.isExpired()) {
-      return next(new appError("Verification code has expired, resend", 400));
-    }
-    await VerificationCode.deleteMany({ user: user._id });
     user.password = password;
     await user.save();
     res.send({ message: "Password reset successfully" });
   })
-  
+
 };
 
 module.exports = UserController;
