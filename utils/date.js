@@ -63,7 +63,7 @@ async function checkLikeEligibilityLikesCountAndPlan(likingUserId) {
   const rec = await Recommendation.findOne({ user: likingUserId });
   const likes = rec.likes;
   if (user.plan === 'free') {
-    if (likes >= 2) {
+    if (likes >= 3) {
       return false;
     }
     return true;
