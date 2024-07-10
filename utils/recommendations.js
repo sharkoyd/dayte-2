@@ -11,7 +11,7 @@ const generateRecommendations = async (userId) => {
 
   // check if the user has a generated recommendation in the past 24 hr
   const existingRecommendation = await Recommendation.findOne({
-    userId,
+    user: userId,
     date: { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) },
   });
 
@@ -50,16 +50,11 @@ const generateRecommendations = async (userId) => {
 
   // 👆🏻👆🏻👆🏻 still not tested yet ... if you face error comment it and uncomment the one bellow 👇🏻👇🏻👇🏻
 
-  
   let recommendedUsers = await User.find({
     _id: { $ne: userId }, // Exclude the current user
     date_of_birth: { $gte: dobStart, $lte: dobEnd }, // Users within 20 years of age
     interests: { $in: user.interests.map((interest) => interest._id) }, // Users with at least one shared interest
   });
-
-
-
-
 
   // Check if the user's plan is free and limit the recommended users to 6
   if (user.plan === "free") {
@@ -73,12 +68,8 @@ const generateRecommendations = async (userId) => {
     date: new Date(),
   });
 
-
-  
-
   await recommendation.save();
 
-  
   console.log("Recommendation generated successfully");
   return recommendation;
 };
