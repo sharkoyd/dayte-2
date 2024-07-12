@@ -10,4 +10,5 @@ const router = express.Router();
 router.post('/like', auth, dateController.like);
 router.get('/matches', auth, dateController.getUserMatches);
 router.post('/setProposedDate', auth, dateController.setProposedDate);
+router.post('/cancelDate', auth, dateController.cancelDate);
 module.exports = router;

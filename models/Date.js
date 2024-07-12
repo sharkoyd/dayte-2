@@ -42,7 +42,14 @@ const dateSchema = new Schema({
     },
   ],
   finalTime: { type: Date },
+  canceled: { type: Boolean, default: false },
 
 });
+// populate user
+dateSchema.pre(["find", "findOne"], function () {
+  this.populate("likingUser").populate("likedUser");
+});
+
+
 
 module.exports = mongoose.model("Date", dateSchema);

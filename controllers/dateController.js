@@ -67,6 +67,8 @@ const dateController = {
         reverseDate.matched = true;
         date = reverseDate;
       }
+  
+      await date.save();
       return res.status(201).json({ date });
     }
 
@@ -139,6 +141,27 @@ const dateController = {
     await date.save();
     res.status(200).json({ date });
   }),
+  cancelDate: catchAsync(async (req, res, next) => {
+    const { id } = req.body;
+
+    if (!id) {
+      return next(new appError("dateId is required", 400));
+    }
+    const date = await DateModel.findById(id);
+    if (!date) {
+      return next(new appError("Date not found", 404));
+    }
+    likedUserId = date.likedUser.id.toString();
+    likingUserId = date.likingUser.id.toString();
+
+    if(likingUserId !== req.user._id.toString() && likedUserId !== req.user._id.toString()){
+      return next(new appError("You are not part of this date", 403));
+    }
+    date.canceled = true;
+    await date.save();
+    res.status(200).json({ date });
+  }
+)
 };
 
 module.exports = dateController;
