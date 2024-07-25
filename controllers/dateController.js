@@ -4,11 +4,10 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const {
   checkLikeEligibilityLikesCountAndPlan,
+  findCommonTime,
 } = require("../utils/date");
 
 const Recommendation = require("../models/recommendation");
-const findCommonTime = require("../utils/date");
-
 const appError = require("../utils/appError");
 
 const dateController = {
@@ -106,15 +105,15 @@ const dateController = {
       );
     }
 
-    const date = await Date.findById(dateId);
+    const date = await DateModel.findById(dateId);
 
     if (!date) {
       return next(new appError("Date not found", 404));
     }
 
     if (
-      date.likingUser.toString() !== req.user._id.toString() &&
-      date.likedUser.toString() !== req.user._id.toString()
+      date.likingUser.id.toString() !== req.user._id.toString() &&
+      date.likedUser.id.toString() !== req.user._id.toString()
     ) {
       return next(new appError("You are not part of this date", 403));
     }
@@ -128,7 +127,7 @@ const dateController = {
       );
     }
 
-    if (date.likingUser.toString() === req.user._id) {
+    if (date.likingUser.id.toString() === req.user._id.toString()) {
       date.likingUserProposedTime = proposedTime;
     } else {
       date.likedUserProposedTime = proposedTime;
@@ -143,6 +142,7 @@ const dateController = {
         date.likingUserProposedTime,
         date.likedUserProposedTime
       );
+      console.log(finalTime);
       date.finalTime = finalTime;
     }
     await date.save();
