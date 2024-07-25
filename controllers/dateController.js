@@ -2,7 +2,9 @@ const catchAsync = require("../utils/catchAsync");
 const DateModel = require("../models/Date");
 const User = require("../models/User");
 const mongoose = require("mongoose");
-const { checkLikeEligibilityLikesCountAndPlan } = require("../utils/date");
+const {
+  checkLikeEligibilityLikesCountAndPlan,
+} = require("../utils/date");
 
 const Recommendation = require("../models/recommendation");
 const findCommonTime = require("../utils/date");
@@ -36,11 +38,15 @@ const dateController = {
 
     // checks if the liking user has already liked the liked user
     if (date) {
-      return next(new appError("You have already liked this user", 400));
+      return next(
+        new appError("You have already liked this user", 400)
+      );
     }
 
     // checks if the liking user has liked more than the limit based on the plan
-    const elligible = await checkLikeEligibilityLikesCountAndPlan(likingUserId);
+    const elligible = await checkLikeEligibilityLikesCountAndPlan(
+      likingUserId
+    );
     if (!elligible) {
       return next(
         new appError("You can't like more users try again later", 400)
@@ -48,7 +54,9 @@ const dateController = {
     }
 
     // increment the likes count of the recommendation
-    const recommendation = await Recommendation.findOne({ user: likingUserId });
+    const recommendation = await Recommendation.findOne({
+      user: likingUserId,
+    });
     recommendation.likes += 1;
     await recommendation.save();
 
@@ -67,9 +75,9 @@ const dateController = {
         reverseDate.matched = true;
         date = reverseDate;
       }
-  
+
       await date.save();
-      return res.status(201).json({ date });
+      return res.status(206).json({ date });
     }
 
     await date.save();
@@ -87,16 +95,15 @@ const dateController = {
       return next(new appError("You don't have any matches", 400));
     }
     res.status(200).json({ dates });
-
-
-
   }),
 
   setProposedDate: catchAsync(async (req, res, next) => {
     const { dateId, proposedTime } = req.body;
 
     if (!dateId || !proposedTime) {
-      return next(new appError("dateId and proposedTime are required", 400));
+      return next(
+        new appError("dateId and proposedTime are required", 400)
+      );
     }
 
     const date = await Date.findById(dateId);
@@ -154,14 +161,16 @@ const dateController = {
     likedUserId = date.likedUser.id.toString();
     likingUserId = date.likingUser.id.toString();
 
-    if(likingUserId !== req.user._id.toString() && likedUserId !== req.user._id.toString()){
+    if (
+      likingUserId !== req.user._id.toString() &&
+      likedUserId !== req.user._id.toString()
+    ) {
       return next(new appError("You are not part of this date", 403));
     }
     date.canceled = true;
     await date.save();
     res.status(200).json({ date });
-  }
-)
+  }),
 };
 
 module.exports = dateController;
