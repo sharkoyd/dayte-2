@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
 
 const dateSchema = new Schema({
   likingUser: { type: Schema.Types.ObjectId, ref: "User" },
@@ -43,9 +44,26 @@ const dateSchema = new Schema({
   ],
   finalTime: { type: Date },
   canceled: { type: Boolean, default: false },
+  
+  // Location fields
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"], // GeoJSON type
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: false,
+    },
+    address: { type: String }, // Optional: store address if needed
+  },
 
 });
-// populate user
+
+// Ensure the schema has an index for geospatial queries
+dateSchema.index({ location: "2dsphere" });
+
+// Populate user
 dateSchema.pre(["find", "findOne"], function () {
   this.populate("likingUser").populate("likedUser");
 });

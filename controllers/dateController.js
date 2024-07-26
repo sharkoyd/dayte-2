@@ -2,9 +2,13 @@ const catchAsync = require("../utils/catchAsync");
 const DateModel = require("../models/Date");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+
+
+
 const {
   checkLikeEligibilityLikesCountAndPlan,
   findCommonTime,
+  assignDateLocation
 } = require("../utils/date");
 
 const Recommendation = require("../models/recommendation");
@@ -76,10 +80,14 @@ const dateController = {
       }
 
       await date.save();
+      console.log(date);
+      console.log(date._id);
+      await assignDateLocation(date._doc._id.toString());
       return res.status(206).json({ date });
     }
 
     await date.save();
+    await assignDateLocation(date._doc._id.toString());
     res.status(200).json({ date });
   }),
 

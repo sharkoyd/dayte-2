@@ -1,5 +1,8 @@
 const Recommendation = require("../models/recommendation");
 const User = require("../models/User");
+const DateModel = require("../models/Date");
+// import from aws.js
+const { fetchLandmarks } = require("../utils/aws");
 
 function findCommonTime(
   likingUserProposedTime,
@@ -112,10 +115,13 @@ function findCommonTime(
   return commonTimes[0];
 }
 
-async function checkLikeEligibilityLikesCountAndPlan(likingUserId) {
+async function checkLikeEligibilityLikesCountAndPlan(likingUser) {
+  console.log("Checking like eligibility");
+  const likingUserId = likingUser.toString();
   const user = await User.findById(likingUserId);
   const rec = await Recommendation.findOne({ user: likingUserId });
   const likes = rec.likes;
+
   if (user.plan === "free") {
     if (likes >= 3) {
       return false;
@@ -138,7 +144,62 @@ async function checkLikeEligibilityLikesCountAndPlan(likingUserId) {
   }
 }
 
+async function assignDateLocation(dateId) {
+  console.log("Assigning date location"); 
+  console.log(dateId);
+  const date = await DateModel.findById(dateId);
+  // get the coordinates of the liking and liked users
+  // location: {
+  //   type: {
+  //     type: String, // Required for GeoJSON objects
+  //     enum: ["Point"], // 'location.type' must be 'Point'
+  //   },
+  //   coordinates: {
+  //     type: [Number], // Array of numbers for longitude and latitude
+  //   },
+
+  console.log(date.likingUser);
+
+  const liking = await User.findById(date.likingUser);
+  const liked = await User.findById(date.likedUser);
+
+  const likingCoordinates = liking.location.coordinates;
+  const likedCoordinates = liked.location.coordinates;
+
+  // get the midpoint between the two coordinates
+  const midpoint = [
+    (likingCoordinates[0] + likedCoordinates[0]) / 2,
+    (likingCoordinates[1] + likedCoordinates[1]) / 2,
+  ];
+
+  // fetch the landmarks around the midpoint
+  const data = await fetchLandmarks(midpoint);
+  const bodyfield = data.body
+
+  // convert bodyfield to JSON
+  const landmarks = JSON.parse(bodyfield);
+  
+
+
+
+  // Set the first landmark's location to the date's location field
+  if (landmarks.landmarks && landmarks.landmarks.length > 0) {
+    const randomIndex = Math.floor(Math.random() * landmarks.landmarks.length);
+    const randomLandmark = landmarks.landmarks[randomIndex];
+    date.location = {
+      type: "Point",
+      coordinates: randomLandmark.Place.Geometry.Point,
+      address: randomLandmark.Place.Label 
+    };
+
+    // Save the updated date object
+    await date.save();
+  } else {
+    console.log("No landmarks found");
+  }
+}
 module.exports = {
   findCommonTime,
   checkLikeEligibilityLikesCountAndPlan,
+  assignDateLocation
 };
