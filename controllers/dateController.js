@@ -167,8 +167,8 @@ const dateController = {
     ) {
       return next(new appError("You are not part of this date", 403));
     }
-    date.canceled = true;
-    await date.save();
+    // delete the date
+    await DateModel.deleteOne({ _id: id });
     res.status(200).json({ date });
   }),
 };
