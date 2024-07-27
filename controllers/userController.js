@@ -290,6 +290,7 @@ const UserController = {
     res.send({ message: "Password reset successfully" });
   })
 
+
 };
 
 module.exports = UserController;

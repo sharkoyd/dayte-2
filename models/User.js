@@ -69,8 +69,10 @@ const userSchema = new Schema({
   },
   end_of_plan: {
     type: Date,
+    default: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   },
 });
+
 
 // Virtual field for age
 userSchema.virtual('age').get(function() {
@@ -81,6 +83,7 @@ userSchema.virtual('age').get(function() {
   if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
+  
   return age;
 });
 
@@ -117,8 +120,25 @@ userSchema.pre("save", async function (next) {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
+
+  
   next();
 });
+
+// after saving when the plan changes we update the end of plan
+userSchema.post("save", async function (doc, next) {
+  if (doc.isModified("plan")) {
+    if (doc.plan === "free") {
+      doc.end_of_plan = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+    if (doc.plan === "premium" || doc.plan === "basic") {
+      doc.end_of_plan = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    }
+    await doc.save();
+  }
+  next();
+});
+
 
 userSchema.methods.getEmptyFields = function () {
   const user = this;

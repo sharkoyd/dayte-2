@@ -57,8 +57,14 @@ const generateRecommendations = async (userId) => {
   });
 
   // Check if the user's plan is free and limit the recommended users to 6
-  if (user.plan === "free") {
+  if (user.plan === "free" || user.plan === "basic"){
     recommendedUsers = recommendedUsers.slice(0, 9);
+  }
+
+
+  if (user.plan === "premium"){
+    recommendedUsers = recommendedUsers.slice(0, 12);
+
   }
 
   // Create a new recommendation
