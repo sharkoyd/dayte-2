@@ -284,31 +284,98 @@ const UserController = {
     res.send({ message: "Password reset successfully" });
   }),
 
-  updateProfile: catchAsync(async (req, res, next) => {
-    const { name,date_of_birth,gender } = req.body;
-    const user = await User.findOne({ _id: req.user._id });
-
-    if (!user) {
-      return next(new appError("User not found", 400));
-    }
-
-    if (name) {
-      user.name = name;
-    }
-
-    if (date_of_birth) {
-      user.date_of_birth = date_of_birth;
-    }
-
-    if (gender) {
-      user.gender = gender;
-    }
-
-    await user.save();
-    res.send(user);
-
-  }),
-
+  updateProfile: [
+    upload.array("new_pics", 12),
+    catchAsync(async (req, res, next) => {
+      const { name, date_of_birth, gender, old_pics } = req.body;
+      const user = await User.findOne({ _id: req.user._id });
+  
+      if (!user) {
+        return next(new appError("User not found", 400));
+      }
+  
+      if (name) {
+        user.name = name;
+      }
+  
+      if (date_of_birth) {
+        user.date_of_birth = date_of_birth;
+      }
+  
+      if (gender) {
+        user.gender = gender;
+      }
+  
+      // Handle old_pics
+      if (old_pics) {
+        let parsed_old_pics = old_pics;
+  
+        if (typeof old_pics === "string") {
+          parsed_old_pics = old_pics.replace(/\\/g, "\\\\");
+          parsed_old_pics = JSON.parse(parsed_old_pics);
+        }
+  
+        parsed_old_pics = parsed_old_pics.map((old_pic) =>
+          old_pic.replace(/\\\\/g, "\\")
+        );
+  
+        if (!Array.isArray(parsed_old_pics)) {
+          throw new TypeError("old_pics is not an array");
+        }
+  
+        const oldImages_in_profile = await UserImage.find({ user_id: user._id });
+        const missingImages = oldImages_in_profile
+          .map((image) => image.image)
+          .filter((image) => !parsed_old_pics.includes(image));
+  
+        for (const missingImage of missingImages) {
+          const image = await UserImage.findOne({ image: missingImage });
+          if (image) {
+            try {
+              fs.unlinkSync(image.image);
+              console.log("File deleted successfully");
+            } catch (err) {
+              console.error("Error deleting file:", err);
+            }
+            await UserImage.deleteOne({ image: missingImage });
+          }
+        }
+  
+        user.images = await UserImage.find({ user_id: user._id });
+      }
+  
+      // Handle new_pics
+      if (req.files && req.files.length > 0) {
+        const imageIds = await Promise.all(
+          req.files.map(async (file, index) => {
+            const userImages = await UserImage.find({ user_id: user._id });
+            let position = 0;
+            for (let i = 0; i < 6; i++) {
+              if (!userImages.some((image) => image.position === i)) {
+                position = i;
+                break;
+              }
+            }
+  
+            const userImage = new UserImage({
+              user_id: user._id,
+              image: file.path,
+              position: position,
+            });
+            await userImage.save();
+            return userImage._id;
+          })
+        );
+  
+        user.images = user.images.concat(imageIds);
+      }
+  
+      await user.save();
+  
+      res.status(200).send({ user: user });
+    }),
+  ],
+  
 };
 
 module.exports = UserController;
