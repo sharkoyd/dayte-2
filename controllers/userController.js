@@ -256,9 +256,6 @@ const UserController = {
     }
   }),
 
-
-
-
   // forgot password ------------------
 
   forgotPassword: catchAsync(async (req, res, next) => {
@@ -271,9 +268,6 @@ const UserController = {
     await verificationCode.save();
     res.send({ message: "Verification code sent successfully" });
   }),
-
-
-
 
   // reset password ------------------
   resetPassword: catchAsync(async (req, res, next) => {
@@ -288,8 +282,32 @@ const UserController = {
     user.password = password;
     await user.save();
     res.send({ message: "Password reset successfully" });
-  })
+  }),
 
+  updateProfile: catchAsync(async (req, res, next) => {
+    const { name,date_of_birth,gender } = req.body;
+    const user = await User.findOne({ _id: req.user._id });
+
+    if (!user) {
+      return next(new appError("User not found", 400));
+    }
+
+    if (name) {
+      user.name = name;
+    }
+
+    if (date_of_birth) {
+      user.date_of_birth = date_of_birth;
+    }
+
+    if (gender) {
+      user.gender = gender;
+    }
+
+    await user.save();
+    res.send(user);
+
+  }),
 
 };
 

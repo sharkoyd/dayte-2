@@ -36,4 +36,10 @@ router.post("/forgotpassword", UserController.forgotPassword);
 // Reset password
 router.post("/resetpassword", UserController.resetPassword);
 
+// update profile
+router.patch("/updateprofile", auth, UserController.updateProfile);
+
+
+
+
 module.exports = router;
