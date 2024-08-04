@@ -169,11 +169,11 @@ const UserController = {
         }
       }
       let user = await User.findOne({ _id: req.user._id });
-      if (user.getEmptyFields().length === 0) {
-        return next(
-          new appError("User profile already completed", 400)
-        );
-      }
+      // if (user.getEmptyFields().length === 0) {
+      //   return next(
+      //     new appError("User profile already completed", 400)
+      //   );
+      // }
 
       if (plan) {
         if (!["free", "premium", "basic"].includes(plan)) {
@@ -223,6 +223,38 @@ const UserController = {
       res.status(200).send({ message: "Profile completed" });
     }),
   ],
+
+  updatePlan: catchAsync(async (req, res, next) => {
+    const { plan } = req.body;
+
+    console.log(req.user.id);
+    console.log(plan);
+    if (!["free", "premium", "basic"].includes(plan)) {
+      return next(new appError("Invalid plan", 400));
+    }
+
+    let end_of_plan;
+    if (plan === "premium" || plan === "basic") {
+      // if the plan is premium or basic end of plan is now plus 30 days
+      end_of_plan = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    }
+    let updatedData = {
+      plan: plan,
+      end_of_plan: end_of_plan,
+    };
+    let user = await User.findByIdAndUpdate(
+      req.user.id,
+      updatedData,
+      {
+        new: true,
+      }
+    );
+    if (!user) {
+      console.log("user not found");
+      return next(new appError("User not found", 400));
+    }
+    res.status(200).send({ message: "Plan updated successfully" });
+  }),
 
   login: catchAsync(async (req, res, next) => {
     console.log(req.body);

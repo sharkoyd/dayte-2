@@ -9,10 +9,18 @@ const router = express.Router();
 router.post("/register", UserController.register);
 
 // Send a verification code to the user
-router.post("/sendverificationcode", auth, UserController.sendVerificationCode);
+router.post(
+  "/sendverificationcode",
+  auth,
+  UserController.sendVerificationCode
+);
 
 // Verify the phone number of the user
-router.post("/verifyphonenumber", auth, UserController.verifyPhoneNumber);
+router.post(
+  "/verifyphonenumber",
+  auth,
+  UserController.verifyPhoneNumber
+);
 
 // Finish the profile of the user
 router.post("/finishprofile", auth, UserController.finishProfile);
@@ -38,7 +46,7 @@ router.post("/resetpassword", UserController.resetPassword);
 // update profile
 router.patch("/updateprofile", auth, UserController.updateProfile);
 
-
-
+//update plan
+router.patch("/updateplan", auth, UserController.updatePlan);
 
 module.exports = router;

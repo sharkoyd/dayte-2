@@ -15,27 +15,30 @@ module.exports = catchAsync(async function (req, res, next) {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     req.user = await User.findById(verified._id);
     let plan = req.user.plan;
+    if (!req.body.hasOwnProperty("plan")) {
+      // Corrected line
+      if (plan == "free") {
+        if (req.user.end_of_plan < Date.now()) {
+          return next(
+            new AppError(
+              "Your Free Trial has expired, please Subscribe to a plan",
+              405
+            )
+          );
+        }
+      }
 
-    if (plan == "free") {
-      if (req.user.end_of_plan < Date.now()) {
-        return next(
-          new AppError(
-            "Your Free Trial has expired, please Subscribe to a plan",
-            405
-          )
-        );
+      if (plan == "premium" || plan == "basic") {
+        if (req.user.end_of_plan < Date.now()) {
+          return next(
+            new AppError("Your Plan has expired, please renew", 405)
+          );
+        }
       }
     }
 
-    if (plan == "premium" || plan == "basic") {
-      if (req.user.end_of_plan < Date.now()) {
-        return next(
-          new AppError("Your Plan has expired, please renew", 405)
-        );
-      }
-    }
     next();
   } catch (err) {
-    next(new AppError("You have to login firszzzzzzt", 410));
+    next(new AppError("You have to login first", 410)); // Corrected typo in error message
   }
 });
