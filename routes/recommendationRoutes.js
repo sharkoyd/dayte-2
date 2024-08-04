@@ -18,7 +18,7 @@ router.get(
 );
 
 // Route to get all recommendations
-router.post(
+router.get(
   "/shuffle",
   auth,
   verifiedPhoneNumber,
