@@ -2,9 +2,11 @@ const express = require("express");
 const AppError = require("./utils/appError");
 const path = require("path");
 const morgan = require("morgan");
+const cors = require("cors");
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(express.json()); // for parsing application/json
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(morgan("dev"));
@@ -27,7 +29,9 @@ app.use((err, req, res, next) => {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
-      ...(process.env.NODE_ENV === "development" && { stack: err.stack }), // Optionally include stack trace in development mode
+      ...(process.env.NODE_ENV === "development" && {
+        stack: err.stack,
+      }), // Optionally include stack trace in development mode
     });
   } else {
     // For other types of errors, you might want to send a generic response or handle them differently
@@ -41,7 +45,9 @@ app.use((err, req, res, next) => {
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+  next(
+    new AppError(`Can't find ${req.originalUrl} on this server!`, 404)
+  );
 });
 
 module.exports = app;

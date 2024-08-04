@@ -27,7 +27,7 @@ const recommendationController = {
     const recommendation = await generateRecommendations(req.user._id);
 
     // just return 200 without sending any data
-    res.status(200).send();
+    res.status(200).send(recommendation);
   }),
 };
 

@@ -16,7 +16,10 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     cb(
       null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+      file.fieldname +
+        "-" +
+        Date.now() +
+        path.extname(file.originalname)
     );
   },
 });
@@ -33,7 +36,10 @@ const UserController = {
     const existingUser = await User.findOne({ phone_number });
     if (existingUser) {
       return next(
-        new appError("User with the same phone number already exists", 400)
+        new appError(
+          "User with the same phone number already exists",
+          400
+        )
       );
     }
 
@@ -57,14 +63,18 @@ const UserController = {
     });
     if (existingVerificationCode) {
       if (!existingVerificationCode.isExpired()) {
-        return next(new appError(`Verification code already sent`, 400));
+        return next(
+          new appError(`Verification code already sent`, 400)
+        );
       }
       await VerificationCode.deleteMany({ user: user._id });
     }
 
     const verificationCode = new VerificationCode({ user: user._id });
     await verificationCode.save();
-    res.status(200).send({ message: "Verification code sent successfully" });
+    res
+      .status(200)
+      .send({ message: "Verification code sent successfully" });
   }),
 
   // step 3: this gets the code sent to the phone number and verifies the phone number
@@ -79,14 +89,16 @@ const UserController = {
       return next(new appError("Invalid verification code", 400));
     }
     if (verificationCode.isExpired()) {
-      return next(new appError("Verification code has expired, resend", 400));
+      return next(
+        new appError("Verification code has expired, resend", 400)
+      );
     }
     await VerificationCode.deleteMany({ user: user._id });
     user.verified = true;
     await user.save();
-    res
-      .status(200)
-      .send({ message: "Phone number has been verified successfully" });
+    res.status(200).send({
+      message: "Phone number has been verified successfully",
+    });
   }),
 
   finishProfile: [
@@ -113,7 +125,9 @@ const UserController = {
           return next(new appError("Invalid interests format", 400));
         }
       }
-      console.log("interests after parsing :  " + userWithoutImages.interests);
+      console.log(
+        "interests after parsing :  " + userWithoutImages.interests
+      );
 
       // Parsing prompts
       if (prompts) {
@@ -125,7 +139,9 @@ const UserController = {
           return next(new appError("Invalid prompts format", 400));
         }
       }
-      console.log("prompts after parsing :  " + userWithoutImages.prompts);
+      console.log(
+        "prompts after parsing :  " + userWithoutImages.prompts
+      );
 
       // parsing description
       if (description) {
@@ -134,11 +150,14 @@ const UserController = {
           userWithoutImages.description = JSON.parse(description);
         } catch (error) {
           console.log(error);
-          return next(new appError("Invalid description format", 400));
+          return next(
+            new appError("Invalid description format", 400)
+          );
         }
       }
       console.log(
-        "description after parsing :  " + userWithoutImages.description
+        "description after parsing :  " +
+          userWithoutImages.description
       );
 
       if (location) {
@@ -151,7 +170,9 @@ const UserController = {
       }
       let user = await User.findOne({ _id: req.user._id });
       if (user.getEmptyFields().length === 0) {
-        return next(new appError("User profile already completed", 400));
+        return next(
+          new appError("User profile already completed", 400)
+        );
       }
 
       if (plan) {
@@ -160,11 +181,15 @@ const UserController = {
         }
         if (plan === "free") {
           // if the plan is free end of plan is now plus 7 days
-          user.end_of_plan = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          user.end_of_plan = new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          );
         }
         if (plan === "premium" || plan === "basic") {
           // if the plan is premium end of plan is now plus 30 days
-          user.end_of_plan = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          user.end_of_plan = new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          );
         }
       }
 
@@ -212,7 +237,9 @@ const UserController = {
       const token = await user.generateAuthToken();
       res.send({ token, user });
     } catch (error) {
-      return next(new appError("Invalid phone number or password", 400));
+      return next(
+        new appError("Invalid phone number or password", 400)
+      );
     }
   }),
 
@@ -252,7 +279,9 @@ const UserController = {
       await user.save();
       res.send({ message: "Password updated successfully" });
     } catch (error) {
-      return next(new appError("double check your old password", 400));
+      return next(
+        new appError("double check your old password", 400)
+      );
     }
   }),
 
@@ -288,48 +317,53 @@ const UserController = {
     upload.array("new_pics", 12),
     catchAsync(async (req, res, next) => {
       const { name, date_of_birth, gender, old_pics } = req.body;
+      console.log(date_of_birth);
       const user = await User.findOne({ _id: req.user._id });
-  
+
       if (!user) {
         return next(new appError("User not found", 400));
       }
-  
+
       if (name) {
         user.name = name;
       }
-  
+
       if (date_of_birth) {
         user.date_of_birth = date_of_birth;
       }
-  
+
       if (gender) {
         user.gender = gender;
       }
-  
+
       // Handle old_pics
       if (old_pics) {
         let parsed_old_pics = old_pics;
-  
+
         if (typeof old_pics === "string") {
           parsed_old_pics = old_pics.replace(/\\/g, "\\\\");
           parsed_old_pics = JSON.parse(parsed_old_pics);
         }
-  
+
         parsed_old_pics = parsed_old_pics.map((old_pic) =>
           old_pic.replace(/\\\\/g, "\\")
         );
-  
+
         if (!Array.isArray(parsed_old_pics)) {
           throw new TypeError("old_pics is not an array");
         }
-  
-        const oldImages_in_profile = await UserImage.find({ user_id: user._id });
+
+        const oldImages_in_profile = await UserImage.find({
+          user_id: user._id,
+        });
         const missingImages = oldImages_in_profile
           .map((image) => image.image)
           .filter((image) => !parsed_old_pics.includes(image));
-  
+
         for (const missingImage of missingImages) {
-          const image = await UserImage.findOne({ image: missingImage });
+          const image = await UserImage.findOne({
+            image: missingImage,
+          });
           if (image) {
             try {
               fs.unlinkSync(image.image);
@@ -340,15 +374,17 @@ const UserController = {
             await UserImage.deleteOne({ image: missingImage });
           }
         }
-  
+
         user.images = await UserImage.find({ user_id: user._id });
       }
-  
+
       // Handle new_pics
       if (req.files && req.files.length > 0) {
         const imageIds = await Promise.all(
           req.files.map(async (file, index) => {
-            const userImages = await UserImage.find({ user_id: user._id });
+            const userImages = await UserImage.find({
+              user_id: user._id,
+            });
             let position = 0;
             for (let i = 0; i < 6; i++) {
               if (!userImages.some((image) => image.position === i)) {
@@ -356,7 +392,7 @@ const UserController = {
                 break;
               }
             }
-  
+
             const userImage = new UserImage({
               user_id: user._id,
               image: file.path,
@@ -366,16 +402,15 @@ const UserController = {
             return userImage._id;
           })
         );
-  
+
         user.images = user.images.concat(imageIds);
       }
-  
+
       await user.save();
-  
+
       res.status(200).send({ user: user });
     }),
   ],
-  
 };
 
 module.exports = UserController;

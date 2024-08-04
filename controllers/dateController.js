@@ -3,12 +3,10 @@ const DateModel = require("../models/Date");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 
-
-
 const {
   checkLikeEligibilityLikesCountAndPlan,
   findCommonTime,
-  assignDateLocation
+  assignDateLocation,
 } = require("../utils/date");
 
 const Recommendation = require("../models/recommendation");
@@ -164,7 +162,7 @@ const dateController = {
     }
     const date = await DateModel.findById(id);
     if (!date) {
-      return next(new appError("Date not found", 404));
+      return next(new appError("Date not found", 400));
     }
     likedUserId = date.likedUser.id.toString();
     likingUserId = date.likingUser.id.toString();
@@ -173,7 +171,7 @@ const dateController = {
       likingUserId !== req.user._id.toString() &&
       likedUserId !== req.user._id.toString()
     ) {
-      return next(new appError("You are not part of this date", 403));
+      return next(new appError("You are not part of this date", 400));
     }
     // delete the date
     await DateModel.deleteOne({ _id: id });
